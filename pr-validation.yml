@@ -1,0 +1,64 @@
+# Terraform PR Validation Pipeline
+# Runs on pull requests to validate Terraform code
+
+trigger:
+branches:
+include:
+- feature/*
+paths:
+include:
+-'**/*.tf'
+-'environments/**'
+-'modules/**'
+
+pr:
+branches:
+include:
+- main
+paths:
+include:
+-'**/*.tf'
+-'environments/**'
+-'modules/**'
+
+variables:
+TF_VERSION:'1.3.0'
+
+pool:
+vmImage:'ubuntu-latest'
+
+stages:
+-stage: Validate
+displayName:'Terraform Validation'
+jobs:
+-job: TerraformValidate
+displayName:'Validate Terraform Code'
+steps:
+-task: TerraformInstaller@0
+inputs:
+terraformVersion:'$(TF_VERSION)'
+displayName:'Install Terraform'
+
+-task: TerraformTaskV2@2
+inputs:
+provider:'azurerm'
+command:'init'
+backendServiceArm:'TODO-ADD-ARM-CONNECTION'
+backendAzureRmResourceGroupName:'TODO'
+backendAzureRmStorageAccountName:'TODO'
+backendAzureRmContainerName:'tfstate'
+backendAzureRmKey:'terraform.tfstate'
+displayName:'Terraform Init'
+
+-task: TerraformTaskV2@2
+inputs:
+provider:'azurerm'
+command:'validate'
+displayName:'Terraform Validate'
+
+-task: TerraformTaskV2@2
+inputs:
+provider:'azurerm'
+command:'fmt'
+commandOptions:'-check -recursive'
+displayName:'Terraform Format Check'
