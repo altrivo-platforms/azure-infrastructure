@@ -1,64 +1,73 @@
 # Terraform PR Validation Pipeline
-# Runs on pull requests to validate Terraform code
+# Validates Terraform code without requiring backend configuration
 
-trigger:
-branches:
-include:
-- feature/*
-paths:
-include:
--'**/*.tf'
--'environments/**'
--'modules/**'
+trigger: none # Don't trigger on direct commits to branches
 
 pr:
-branches:
-include:
-- main
-paths:
-include:
--'**/*.tf'
--'environments/**'
--'modules/**'
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - "environments/**"
+      - "modules/**"
 
 variables:
-TF_VERSION:'1.3.0'
+  TF_VERSION: "1.9.0"
+  TF_IN_AUTOMATION: "true"
 
 pool:
-vmImage:'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 stages:
--stage: Validate
-displayName:'Terraform Validation'
-jobs:
--job: TerraformValidate
-displayName:'Validate Terraform Code'
-steps:
--task: TerraformInstaller@0
-inputs:
-terraformVersion:'$(TF_VERSION)'
-displayName:'Install Terraform'
+  - stage: Validate
+    displayName: "Terraform Validation"
+    jobs:
+      - job: TerraformValidate
+        displayName: "Validate Terraform Code"
+        steps:
+          # Install Terraform
+          - script: |
+              echo "=== Installing Terraform $(TF_VERSION) ==="
+              wget -q https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+              unzip -q terraform_$(TF_VERSION)_linux_amd64.zip
+              sudo mv terraform /usr/local/bin/
+              terraform version
+              echo "✅ Terraform installed"
+            displayName: "Install Terraform"
 
--task: TerraformTaskV2@2
-inputs:
-provider:'azurerm'
-command:'init'
-backendServiceArm:'TODO-ADD-ARM-CONNECTION'
-backendAzureRmResourceGroupName:'TODO'
-backendAzureRmStorageAccountName:'TODO'
-backendAzureRmContainerName:'tfstate'
-backendAzureRmKey:'terraform.tfstate'
-displayName:'Terraform Init'
+          # Format Check
+          - script: |
+              echo "=== Terraform Format Check ==="
+              if ! find . -name "*.tf" -type f | grep -q .; then
+                echo "⚠️  No .tf files found - skipping"
+                exit 0
+              fi
+              terraform fmt -check -recursive -diff
+              echo "✅ Format check passed"
+            displayName: "Format Check"
+            continueOnError: false
 
--task: TerraformTaskV2@2
-inputs:
-provider:'azurerm'
-command:'validate'
-displayName:'Terraform Validate'
+          # Validate Syntax
+          - script: |
+              echo "=== Terraform Validation ==="
+              TERRAFORM_DIRS=$(find . -name "*.tf" -type f -exec dirname {} \; | sort -u)
 
--task: TerraformTaskV2@2
-inputs:
-provider:'azurerm'
-command:'fmt'
-commandOptions:'-check -recursive'
-displayName:'Terraform Format Check'
+              if [ -z "$TERRAFORM_DIRS" ]; then
+                echo "⚠️  No Terraform files found"
+                exit 0
+              fi
+
+              for dir in $TERRAFORM_DIRS; do
+                echo "📁 Validating: $dir"
+                cd "$dir"
+                terraform init -backend=false
+                terraform validate
+                cd - > /dev/null
+              done
+
+              echo "✅ Validation complete"
+            displayName: "Validate Terraform"
+            continueOnError: false
