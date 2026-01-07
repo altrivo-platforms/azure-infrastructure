@@ -1,0 +1,48 @@
+# CODEOWNERS file for automatic review assignment
+# This file specifies who should review changes to different parts of the codebase
+
+# Default owners for everything in the repository
+# Any change not matched by more specific patterns requires review by these users
+*  @nikhil-mhatre
+
+# Terraform modules - all module changes require Platform Lead review
+modules/  @nikhil-mhatre
+modules/**/*.tf  @nikhil-mhatre
+modules/**/*.tfvars  @nikhil-mhatre
+
+# Environment-specific configurations
+# Both dev and prod configs need review
+environments/  @nikhil-mhatre
+environments/dev/**  @nikhil-mhatre
+environments/prod/**  @nikhil-mhatre
+
+# Azure DevOps pipelines - critical path, requires Lead approval
+.azuredevops/  @nikhil-mhatre
+.azuredevops/pipelines/**  @nikhil-mhatre
+
+# Infrastructure decisions and architecture documents
+docs/  @nikhil-mhatre
+docs/decisions/**  @nikhil-mhatre
+docs/architecture/**  @nikhil-mhatre
+
+# Root Terraform files - core configuration
+main.tf  @nikhil-mhatre
+variables.tf  @nikhil-mhatre
+outputs.tf  @nikhil-mhatre
+providers.tf  @nikhil-mhatre
+
+# Root-level security and governance files
+.gitignore  @nikhil-mhatre
+.github/CODEOWNERS  @nikhil-mhatre
+terraform.tfstate*  @nikhil-mhatre
+
+# Documentation can be reviewed more flexibly
+README.md  @nikhil-mhatre
+docs/runbooks/**  @nikhil-mhatre
+
+# This file defines the review workflow:
+# 1. Engineer creates PR from feature branch
+# 2. GitHub checks which files changed
+# 3. Matches file paths against CODEOWNERS patterns
+# 4. Automatically requests review from @nikhil-mhatre
+# 5. PR cannot merge until Lead approves
