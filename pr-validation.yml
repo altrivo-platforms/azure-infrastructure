@@ -19,7 +19,7 @@ variables:
   TF_IN_AUTOMATION: "true"
 
 pool:
-  name: "Azure Pipelines"
+  name: "nikhil-self-hosted-agent"
 
 stages:
   - stage: Validate
