@@ -19,7 +19,7 @@ variables:
   TF_IN_AUTOMATION: "true"
 
 pool:
-  vmImage: "ubuntu-latest"
+  name: "Azure Pipelines"
 
 stages:
   - stage: Validate
