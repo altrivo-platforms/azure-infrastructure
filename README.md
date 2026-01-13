@@ -120,6 +120,35 @@ azure-infrastructure/
 
 ---
 
+## 🔐 Terraform Backend (Remote State)
+
+The infrastructure state is stored in a centralized, secure Azure Storage Account (bootstrapped via `infrastructure/scripts/setup-remote-state.sh`).
+
+| Resource            | Value                                    |
+| :------------------ | :--------------------------------------- |
+| **Resource Group**  | `rg-azureplatform-prod-centralindia-001` |
+| **Storage Account** | `stazplatprod7bf60d`                     |
+| **Container**       | `tfstate`                                |
+| **Region**          | Central India                            |
+| **State Key**       | `terraform.tfstate`                      |
+
+> **⚠️ Security Note:**
+> The **Access Key** for this storage account is stored in the team's password manager (or Azure Key Vault).
+> **DO NOT** commit the access key to this repository.
+
+### How to Authenticate
+
+Developers with `Contributor` access can initialize Terraform using their Azure AD credentials:
+
+```bash
+# Login to Azure
+az login
+
+# Initialize Terraform (will automatically use the backend config)
+terraform init
+
+```
+
 ## 🚀 Quick Start
 
 ### Prerequisites
